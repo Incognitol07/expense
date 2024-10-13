@@ -2,7 +2,13 @@ class Report:
     ...
 
 class Storage:
-    ...
+    @staticmethod
+    def store(record: dict):
+        with open("expenses.csv","a") as file:
+            file.write(f"{record['date']}, {record['description']}, {record['amount']}, {record['category']}")
+            file.close()
+
+
 
 class InOutError(Exception):
     ...
@@ -14,7 +20,7 @@ class Edit:
     ...
 
 class Record:
-    def __init__(self, date, description, amount, category):
+    def __init__(self, date: str, description: str, amount: float, category:str):
         self._date = date
         self._description = description
         self._amount = amount
