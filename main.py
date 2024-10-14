@@ -35,7 +35,7 @@ class CLI:
     @staticmethod
     def add_expense():
         date = input("Enter date (DD/MM/YYYY): ")
-        description = input("Enter description: ").strip()
+        description = input("Enter description: ").strip().title()
         amount = float(input("Enter amount: ").strip())
         category = input("Enter category: ").title().strip()
         new_record = Record(date, description, amount, category)
