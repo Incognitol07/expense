@@ -1,5 +1,11 @@
 class Report:
-    ...
+    @staticmethod
+    def display():
+        with open("expenses.csv", "r") as file:
+            report = file.readlines()
+            for idx,line in enumerate(report, start=1):
+                print(f"{idx}. {line}")
+            file.close()
 
 class Storage:
     @staticmethod
@@ -7,8 +13,6 @@ class Storage:
         with open("expenses.csv","a") as file:
             file.write(f"{record['date']}, {record['description']}, {record['amount']}, {record['category']}")
             file.close()
-
-
 
 class InOutError(Exception):
     ...
@@ -44,3 +48,7 @@ class Record:
     
     def details(self):
         return {"date": self.date, "description": self.description, "amount": self.amount, "category": self.category}
+    
+
+if __name__ == "__main__":
+    pass
