@@ -10,17 +10,54 @@ class Report:
     report():
         Returns the list of all records from the expenses CSV file.
     """
-    
     @staticmethod
     def display():
-        """Displays all records in the expenses.csv file with line numbers."""
+        """Displays all records from expenses.csv with dynamic column widths, S/N, and formatted output."""
         try:
+            # Read data from file
             with open("expenses.csv", "r") as file:
-                report = file.readlines()
-                for idx, line in enumerate(report, start=1):
-                    print(f"{idx}. {line}")
+                report = [line.strip().split(",") for line in file.readlines()]
+
+            if not report:
+                print("No records found.")
+                return
+
+            # Column titles with added S/N
+            headers = ["S/N", "Date", "Description", "Amount", "Category"]
+
+            # Determine maximum width for each column dynamically, including S/N
+            max_lengths = [max(len(row[i]) for row in report) for i in range(4)]
+            max_lengths = [max(max_len, len(header)) for max_len, header in zip(max_lengths, headers[1:])]
+            max_lengths.insert(0, len(headers[0]))  # For S/N column
+
+            total_width = sum(max_lengths) + (len(headers) - 1) * 3 + 4  # For ' | ' between columns and borders
+
+            # Header row
+            print("\033[36m" + "-" * total_width + "\033[0m")
+            header_row = " | ".join([f"{header:<{max_len}}" for header, max_len in zip(headers, max_lengths)])
+            print(f"\033[36m| {header_row} |\033[0m")
+            print("\033[36m" + "-" * total_width + "\033[0m")
+
+            # Data rows
+            total_amount = 0
+            for idx, row in enumerate(report, start=1):
+                date, description, amount, category = row
+                total_amount += float(amount)
+                row_data = [f"{idx:<{max_lengths[0]}}"] + [f"{field:<{max_len}}" for field, max_len in zip(row, max_lengths[1:])]
+                row_data_str = " | ".join(row_data)
+                print(f"\033[33m| {row_data_str} |\033[0m")
+                print("\033[36m" + "-" * total_width + "\033[0m")
+
+            # Total amount row (align left with description)
+            total_row = f"{'Total Amount:':<{max_lengths[0] + max_lengths[1] + max_lengths[2] + 8}} {total_amount:.2f}"
+            print(f"\033[36m| {total_row:<{total_width - 2}} |\033[0m")
+            print("\033[36m" + "-" * total_width + "\033[0m")
+
         except FileNotFoundError:
             raise InOutError("Expenses file not found!")
+        except ValueError:
+            raise InOutError("Error in parsing the amounts or data in the file.")
+
     
     @staticmethod
     def report():
@@ -96,19 +133,37 @@ class Retrieval:
     @staticmethod
     def display_filtered(category):
         """
-        Displays filtered records that match the specified category.
+        Displays filtered records that match the specified category with an S/N field.
         
         Parameters:
         category (str): The category to filter records by.
         """
         filtered_records = Retrieval.filter(category)
+        
         if not filtered_records:
             print(f"No records found for category: {category}")
             return
+
+        # Calculate maximum lengths for formatting, including S/N
+        max_lengths = [5, 10, 15, 10, 15]  # Adjust as needed (S/N + 4 columns)
+        total_amount = 0
         
-        # Display filtered records with details
+        # Header
+        print("\033[36m" + "-" * (sum(max_lengths) + 12))
+        print(f"| {'S/N':<{max_lengths[0]}} | {'Date':<{max_lengths[1]}} | {'Description':<{max_lengths[2]}} | {'Amount':<{max_lengths[3]}} | {'Category':<{max_lengths[4]}} |")
+        print("\033[36m" + "-" * (sum(max_lengths) + 12))
+
+        # Display filtered records and calculate total amount
         for idx, record in enumerate(filtered_records, start=1):
-            print(f"{idx}. Date: {record[0]}, Description: {record[1]}, Amount: {record[2]}, Category: {record[3].strip()}")
+            print(f"\033[33m| {idx:<{max_lengths[0]}} | {record[0]:<{max_lengths[1]}} | {record[1]:<{max_lengths[2]}} | {float(record[2]):<{max_lengths[3]}} | {record[3].strip():<{max_lengths[4]}} |")
+            print("\033[36m" + "-" * (sum(max_lengths) + 12))
+            total_amount += float(record[2])
+
+        # Display total amount
+        print(f"| {'Total Amount:':<{max_lengths[0] + max_lengths[1] + max_lengths[2]}} | {total_amount:<{max_lengths[3]}} |")
+        print("\033[36m" + "-" * (sum(max_lengths) + 12) + "\033[0m")
+
+
 
 
 class Edit:

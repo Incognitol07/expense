@@ -35,9 +35,9 @@ class CLI:
     @staticmethod
     def add_expense():
         date = input("Enter date (DD/MM/YYYY): ")
-        description = input("Enter description: ")
-        amount = float(input("Enter amount: "))
-        category = input("Enter category: ")
+        description = input("Enter description: ").strip()
+        amount = float(input("Enter amount: ").strip())
+        category = input("Enter category: ").title().strip()
         new_record = Record(date, description, amount, category)
         Storage.store(new_record.details())
         print("Expense added successfully!")
@@ -54,7 +54,7 @@ class CLI:
         date = input("Enter new date (DD/MM/YYYY): ")
         description = input("Enter new description: ")
         amount = float(input("Enter new amount: "))
-        category = input("Enter new category: ")
+        category = input("Enter new category: ").title()
         new_record = {"date": date, "description": description, "amount": amount, "category": category}
         Edit.modify_record(index, new_record)
 
@@ -66,5 +66,8 @@ class CLI:
 
     @staticmethod
     def filter_expenses():
-        category = input("Enter category to filter: ")
+        category = input("Enter category to filter: ").title()
         Retrieval.display_filtered(category)
+
+if __name__=="__main__":
+    CLI.run()
