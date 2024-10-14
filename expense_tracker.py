@@ -12,7 +12,7 @@ class Report:
     """
     @staticmethod
     def display():
-        """Displays all records from expenses.csv with dynamic column widths, S/N, and formatted output."""
+        """Displays all records from expenses.csv with dynamic column widths, S/N, and a simple total amount row."""
         try:
             # Read data from file
             with open("expenses.csv", "r") as file:
@@ -30,13 +30,11 @@ class Report:
             max_lengths = [max(max_len, len(header)) for max_len, header in zip(max_lengths, headers[1:])]
             max_lengths.insert(0, len(headers[0]))  # For S/N column
 
-            total_width = sum(max_lengths) + (len(headers) - 1) * 3 + 4  # For ' | ' between columns and borders
-
             # Header row
-            print("\033[36m" + "-" * total_width + "\033[0m")
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
             header_row = " | ".join([f"{header:<{max_len}}" for header, max_len in zip(headers, max_lengths)])
             print(f"\033[36m| {header_row} |\033[0m")
-            print("\033[36m" + "-" * total_width + "\033[0m")
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
 
             # Data rows
             total_amount = 0
@@ -46,17 +44,17 @@ class Report:
                 row_data = [f"{idx:<{max_lengths[0]}}"] + [f"{field:<{max_len}}" for field, max_len in zip(row, max_lengths[1:])]
                 row_data_str = " | ".join(row_data)
                 print(f"\033[33m| {row_data_str} |\033[0m")
-                print("\033[36m" + "-" * total_width + "\033[0m")
+                print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
 
-            # Total amount row (align left with description)
-            total_row = f"{'Total Amount:':<{max_lengths[0] + max_lengths[1] + max_lengths[2] + 8}} {total_amount:.2f}"
-            print(f"\033[36m| {total_row:<{total_width - 2}} |\033[0m")
-            print("\033[36m" + "-" * total_width + "\033[0m")
+            # Simple total amount row
+            print(f"\033[36m| {'Total Amount:':<20}           |{total_amount:^19}|\033[0m")
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
 
         except FileNotFoundError:
             raise InOutError("Expenses file not found!")
         except ValueError:
             raise InOutError("Error in parsing the amounts or data in the file.")
+
 
     
     @staticmethod
@@ -134,34 +132,55 @@ class Retrieval:
     def display_filtered(category):
         """
         Displays filtered records that match the specified category with an S/N field.
-        
+
         Parameters:
         category (str): The category to filter records by.
         """
-        filtered_records = Retrieval.filter(category)
-        
-        if not filtered_records:
-            print(f"No records found for category: {category}")
-            return
+        try:
+            # Read data from file
+            with open("expenses.csv", "r") as file:
+                report = [line.strip().split(",") for line in file.readlines()]
 
-        # Calculate maximum lengths for formatting, including S/N
-        max_lengths = [5, 10, 15, 10, 15]  # Adjust as needed (S/N + 4 columns)
-        total_amount = 0
-        
-        # Header
-        print("\033[36m" + "-" * (sum(max_lengths) + 12))
-        print(f"| {'S/N':<{max_lengths[0]}} | {'Date':<{max_lengths[1]}} | {'Description':<{max_lengths[2]}} | {'Amount':<{max_lengths[3]}} | {'Category':<{max_lengths[4]}} |")
-        print("\033[36m" + "-" * (sum(max_lengths) + 12))
+            # Filter records by category
+            filtered_records = [row for row in report if row[3].strip().lower() == category.lower()]
 
-        # Display filtered records and calculate total amount
-        for idx, record in enumerate(filtered_records, start=1):
-            print(f"\033[33m| {idx:<{max_lengths[0]}} | {record[0]:<{max_lengths[1]}} | {record[1]:<{max_lengths[2]}} | {float(record[2]):<{max_lengths[3]}} | {record[3].strip():<{max_lengths[4]}} |")
-            print("\033[36m" + "-" * (sum(max_lengths) + 12))
-            total_amount += float(record[2])
+            if not filtered_records:
+                print(f"No records found for category: {category}")
+                return
 
-        # Display total amount
-        print(f"| {'Total Amount:':<{max_lengths[0] + max_lengths[1] + max_lengths[2]}} | {total_amount:<{max_lengths[3]}} |")
-        print("\033[36m" + "-" * (sum(max_lengths) + 12) + "\033[0m")
+            # Column titles with added S/N
+            headers = ["S/N", "Date", "Description", "Amount", "Category"]
+
+            # Determine maximum width for each column dynamically, including S/N
+            max_lengths = [max(len(row[i]) for row in filtered_records) for i in range(4)]
+            max_lengths = [max(max_len, len(header)) for max_len, header in zip(max_lengths, headers[1:])]
+            max_lengths.insert(0, len(headers[0]))  # For S/N column
+
+            # Header row
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
+            header_row = " | ".join([f"{header:<{max_len}}" for header, max_len in zip(headers, max_lengths)])
+            print(f"\033[36m| {header_row} |\033[0m")
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
+
+            # Data rows
+            total_amount = 0
+            for idx, row in enumerate(filtered_records, start=1):
+                date, description, amount, category = row
+                total_amount += float(amount)
+                row_data = [f"{idx:<{max_lengths[0]}}"] + [f"{field:<{max_len}}" for field, max_len in zip(row, max_lengths[1:])]
+                row_data_str = " | ".join(row_data)
+                print(f"\033[33m| {row_data_str} |\033[0m")
+                print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
+
+            # Simple total amount row
+            print(f"\033[36m| {'Total Amount:':<20}           |{total_amount:^19}|\033[0m")
+            print("\033[36m" + "-" * (sum(max_lengths) + 16) + "\033[0m")
+
+        except FileNotFoundError:
+            raise InOutError("Expenses file not found!")
+        except ValueError:
+            raise InOutError("Error in parsing the amounts or data in the file.")
+
 
 
 
