@@ -15,8 +15,8 @@ A simple Python-based application for tracking and categorizing personal expense
 ## How to Use
 ### 1. Clone the repository
    ```bash
-   git clone https://github.com/Incognitol07/your-repo.git
-   cd your-repo
+   git clone https://github.com/Incognitol07/expense.git
+   cd expense
    ```
 ### 2. Add an Expense
     Run the program and add expenses using the interface or directly into the expenses.csv file.
